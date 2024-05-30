@@ -34,6 +34,10 @@ argumentos_deletar = reqparse.RequestParser()
 argumentos_deletar.add_argument('id', type=int, required=True, help="O id nao pode ficar em branco!")
 
 def parse_duration(duration_str):
+    pattern = re.compile(r'^\d+\s*dias,\s*\d+\s*horas,\s*\d+\s*minutos$')
+    if not pattern.match(duration_str):
+        raise ValueError("Formato de duração inválido. Use o formato 'X dias, Y horas, Z minutos'")
+    
     days, hours, minutes = 0, 0, 0
     for part in duration_str.split(','):
         if 'dias' in part:
@@ -52,22 +56,28 @@ class ProductCreate(Resource):
     def post(self):
         try:
             datas = argumentos.parse_args()
-            duracao_missao_segundos = parse_duration(datas['duracao_missao'])  # Converter para segundos
+            try:
+                duracao_missao_segundos = parse_duration(datas['duracao_missao'])
+            except ValueError as e:
+                return jsonify({'status': 400, 'msg': str(e)}), 400
             Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
             return {"message": 'Product create successfully!'}, 200
         except Exception as e:
-            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
+            return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
 class ProductUpdate(Resource):
     def put(self):
         try:
             datas = argumentos_update.parse_args()
-            duracao_missao_segundos = parse_duration(datas['duracao_missao'])  # Converter para segundos
+            try:
+                duracao_missao_segundos = parse_duration(datas['duracao_missao'])
+            except ValueError as e:
+                return jsonify({'status': 400, 'msg': str(e)}), 400
             Products.update_products(self, datas['id'], 
             datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
             return {"message": 'Products update successfully!'}, 200    
         except Exception as e:
-            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
+            return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
 class ProductDelete(Resource):
     def delete(self):
@@ -76,4 +86,4 @@ class ProductDelete(Resource):
             Products.delete_products(self, datas['id'])
             return {"message": 'Products delete successfully!'}, 200
         except Exception as e:
-            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
+            return jsonify({'status': 500, 'msg': f'{e}'}), 500
