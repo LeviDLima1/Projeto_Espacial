@@ -1,5 +1,4 @@
 from app import db
-from datetime import timedelta
 
 class Products(db.Model):
     __tablename__ = 'products'
@@ -49,12 +48,3 @@ class Products(db.Model):
             db.session.commit() #confirmar e salvar as alterações no banco de dados
         except Exception as e:
             print(e)
-
-    def __repr__(self):
-        duracao = timedelta(seconds=self.duracao_missao)
-        dias = duracao.days
-        horas, resto = divmod(duracao.seconds, 3600)
-        minutos = resto // 60
-        
-        duracao_formatada = f"{dias} dias, {horas} horas, {minutos} minutos"
-        return f"<Products(id={self.id}, name='{self.name}', duracao_missao='{duracao_formatada}')>"

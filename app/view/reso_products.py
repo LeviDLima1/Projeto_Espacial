@@ -2,6 +2,7 @@ from flask import jsonify
 from flask_restful import Resource, reqparse
 from datetime import datetime
 from app.models.products import Products
+import re
 
 #para adicionar
 argumentos = reqparse.RequestParser()#definir os argumentos da solicitação HTTP
@@ -11,7 +12,7 @@ argumentos.add_argument('destino', type=str, required=True, help="O destino nao 
 argumentos.add_argument('estado_missao', type=str, required=True, help="O estado_missao nao pode ficar em branco!")
 argumentos.add_argument('tripulacao', type=str, required=True, help="A tripulacao nao pode ficar em branco!")
 argumentos.add_argument('carga_util', type=str, required=True, help="A carga_util nao pode ficar em branco!")
-argumentos.add_argument('duracao_missao', type=int, required=True, help="A duracao_missao nao pode ficar em branco!")
+argumentos.add_argument('duracao_missao', type=str, required=True, help="A duracao_missao nao pode ficar em branco!")
 argumentos.add_argument('missao_custo', type=float, required=True, help="O missao_custo nao pode ficar em branco!")
 argumentos.add_argument('missao_status', type=str, required=True, help="O missao_status nao pode ficar em branco!")
 
@@ -24,13 +25,24 @@ argumentos_update.add_argument('destino', type=str, required=True, help="O desti
 argumentos_update.add_argument('estado_missao', type=str, required=True, help="O estado_missao nao pode ficar em branco!")
 argumentos_update.add_argument('tripulacao', type=str, required=True, help="A tripulacao nao pode ficar em branco!")
 argumentos_update.add_argument('carga_util', type=str, required=True, help="A carga_util nao pode ficar em branco!")
-argumentos_update.add_argument('duracao_missao', type=int, required=True, help="A duracao_missao nao pode ficar em branco!")
+argumentos_update.add_argument('duracao_missao', type=str, required=True, help="A duracao_missao nao pode ficar em branco!")
 argumentos_update.add_argument('missao_custo', type=float, required=True, help="O missao_custo nao pode ficar em branco!")
 argumentos_update.add_argument('missao_status', type=str, required=True, help="O missao_status nao pode ficar em branco!")
 
 #deletar
 argumentos_deletar = reqparse.RequestParser()
 argumentos_deletar.add_argument('id', type=int, required=True, help="O id nao pode ficar em branco!")
+
+def parse_duration(duration_str):
+    days, hours, minutes = 0, 0, 0
+    for part in duration_str.split(','):
+        if 'dias' in part:
+            days = int(part.split()[0])
+        elif 'horas' in part:
+            hours = int(part.split()[0])
+        elif 'minutos' in part:
+            minutes = int(part.split()[0])
+    return days * 86400 + hours * 3600 + minutes * 60
 
 class Index(Resource):
     def get(self):
@@ -40,20 +52,22 @@ class ProductCreate(Resource):
     def post(self):
         try:
             datas = argumentos.parse_args()
-            Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
+            duracao_missao_segundos = parse_duration(datas['duracao_missao'])  # Converter para segundos
+            Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
             return {"message": 'Product create successfully!'}, 200
         except Exception as e:
-            return jsonify({'status': 500, 'msg': f'{e}'}), 500
+            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
         
 class ProductUpdate(Resource):
     def put(self):
         try:
             datas = argumentos_update.parse_args()
+            duracao_missao_segundos = parse_duration(datas['duracao_missao'])  # Converter para segundos
             Products.update_products(self, datas['id'], 
-            datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
+            datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
             return {"message": 'Products update successfully!'}, 200    
         except Exception as e:
-            return jsonify({'status': 500, 'msg': f'{e}'}), 500
+            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
         
 class ProductDelete(Resource):
     def delete(self):
@@ -62,4 +76,4 @@ class ProductDelete(Resource):
             Products.delete_products(self, datas['id'])
             return {"message": 'Products delete successfully!'}, 200
         except Exception as e:
-            return jsonify({'status': 500, 'msg': f'{e}'}), 500
+            return jsonify({'status': 500, 'msg': 'Erro no servidor: {}'.format(e)}), 500
