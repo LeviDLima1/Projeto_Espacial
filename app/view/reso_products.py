@@ -40,7 +40,7 @@ class ProductCreate(Resource):
     def post(self):
         try:
             datas = argumentos.parse_args()
-            Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado)missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
+            Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
             return {"message": 'Product create successfully!'}, 200
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
@@ -50,7 +50,7 @@ class ProductUpdate(Resource):
         try:
             datas = argumentos_update.parse_args()
             Products.update_products(self, datas['id'], 
-            datas['name'], datas['data_lancamento'], datas['destino'], datas['estado)missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
+            datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], datas['duracao_missao'], datas['missao_custo'], datas['missao_status'])
             return {"message": 'Products update successfully!'}, 200    
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
@@ -59,7 +59,7 @@ class ProductDelete(Resource):
     def delete(self):
         try:
             datas = argumentos_deletar.parse_args()
-            Products.delete_products(self,datas['id'])
+            Products.delete_products(self, datas['id'])
             return {"message": 'Products delete successfully!'}, 200
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
