@@ -36,7 +36,7 @@ argumentos_deletar.add_argument('id', type=int, required=True, help="O id nao po
 def parse_duration(duration_str):
     pattern = re.compile(r'^\d+\s*dias,\s*\d+\s*horas,\s*\d+\s*minutos$')
     if not pattern.match(duration_str):
-        raise ValueError("Formato de duração inválido. Use o formato 'X dias, Y horas, Z minutos'")
+        raise ValueError("Formato de duração inválido. Use o formato 'X dias, Y horas, Z minutos")
     
     days, hours, minutes = 0, 0, 0
     for part in duration_str.split(','):
