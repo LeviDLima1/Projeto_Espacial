@@ -121,11 +121,12 @@ class ProductDetails(Resource):
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
 class MissionByDateRange(Resource):
-    def get(self):
+    def post(self):  # Mudamos de GET para POST para aceitar JSON no corpo da requisição
         try:
-            # Obter parâmetros de data
-            data_inicial = request.args.get('data_inicial')
-            data_final = request.args.get('data_final')
+            data = request.get_json()
+
+            data_inicial = data.get('data_inicial')
+            data_final = data.get('data_final')
 
             # Verificar se os parâmetros de data estão presentes
             if not data_inicial or not data_final:
