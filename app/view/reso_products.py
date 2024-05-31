@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request
 from flask_restful import Resource, reqparse
 from datetime import datetime
 from app.models.products import Products
@@ -37,7 +37,7 @@ def parse_duration(duration_str):
     pattern = re.compile(r'^\d+\s*dias,\s*\d+\s*horas,\s*\d+\s*minutos$')
     if not pattern.match(duration_str):
         raise ValueError("Formato de duração inválido. Use o formato 'X dias, Y horas, Z minutos")
-    
+
     days, hours, minutes = 0, 0, 0
     for part in duration_str.split(','):
         if 'dias' in part:
@@ -56,10 +56,11 @@ class ProductCreate(Resource):
     def post(self):
         try:
             datas = argumentos.parse_args()
-            try:
-                duracao_missao_segundos = parse_duration(datas['duracao_missao'])
-            except ValueError as e:
-                return jsonify({'status': 400, 'msg': str(e)}), 400
+            duracao_missao_segundos = parse_duration(datas['duracao_missao'])
+        except ValueError as e:
+            return jsonify({'status': 400, 'msg': str(e)}), 400
+
+        try:
             Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
             return {"message": 'Product create successfully!'}, 200
         except Exception as e:
@@ -87,3 +88,76 @@ class ProductDelete(Resource):
             return {"message": 'Products delete successfully!'}, 200
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
+        
+class MissionList(Resource):
+    def get(self):
+        try:
+            # Obter todas as missões ordenadas pela data de lançamento em ordem decrescente
+            missions = Products.query.order_by(Products.data_lancamento.desc()).all()
+            # Criar uma lista com os detalhes das missões
+            mission_list = [
+                {
+                    "name": mission.name, "destino": mission.destino, "estado_missao": mission.estado_missao, "data_lancamento": mission.data_lancamento
+                } for mission in missions
+            ]
+            return jsonify(mission_list)
+        except Exception as e:
+            return jsonify({'status': 500, 'msg': f'{e}'}), 500
+        
+class ProductDetails(Resource):
+    def get(self, id):
+        try:
+            # Obter a missão com base no ID
+            mission = Products.query.get(id)
+            if not mission:
+                return {"message": "Mission not found"}, 404
+            
+            # Criar um dicionário com os detalhes da missão
+            mission_details = {
+                "id": mission.id, "name": mission.name, "data_lancamento": mission.data_lancamento, "destino": mission.destino, "estado_missao": mission.estado_missao, "tripulacao": mission.tripulacao, "carga_util": mission.carga_util, "duracao_missao": mission.duracao_missao, "missao_custo": mission.missao_custo, "missao_status": mission.missao_status
+            }
+            return jsonify(mission_details)
+        except Exception as e:
+            return jsonify({'status': 500, 'msg': f'{e}'}), 500
+        
+class MissionByDateRange(Resource):
+    def get(self):
+        try:
+            # Obter parâmetros de data
+            data_inicial = request.args.get('data_inicial')
+            data_final = request.args.get('data_final')
+
+            # Verificar se os parâmetros de data estão presentes
+            if not data_inicial or not data_final:
+                return {"error": "Parâmetros data_inicial e data_final são obrigatórios"}, 400
+
+            # Converter strings para objetos datetime
+            data_inicial = datetime.strptime(data_inicial, '%Y-%m-%d')
+            data_final = datetime.strptime(data_final, '%Y-%m-%d')
+
+            # Pesquisar missões dentro do intervalo de datas
+            missions = Products.query.filter(Products.data_lancamento >= data_inicial, Products.data_lancamento <= data_final).all()
+            if not missions:
+                return {"message": "Nenhuma missão encontrada nesse intervalo de datas"}, 404
+
+            # Preparar a resposta com os detalhes das missões
+            result = []
+            for mission in missions:
+                mission_data = {
+                    'id': mission.id,
+                    'name': mission.name,
+                    'data_lancamento': mission.data_lancamento.strftime('%Y-%m-%d'),
+                    'destino': mission.destino,
+                    'estado_missao': mission.estado_missao,
+                    'tripulacao': mission.tripulacao,
+                    'carga_util': mission.carga_util,
+                    'duracao_missao': mission.duracao_missao,
+                    'missao_custo': str(mission.missao_custo),
+                    'missao_status': mission.missao_status
+                }
+                result.append(mission_data)
+
+            return result, 200
+
+        except Exception as e:
+            return {"error": str(e)}, 500

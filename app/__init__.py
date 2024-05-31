@@ -12,8 +12,11 @@ from app.models.products import Products
 with app.app_context():
     db.create_all()
 
-from app.view.reso_products import Index, ProductCreate,ProductUpdate, ProductDelete
+from app.view.reso_products import Index, ProductCreate, ProductUpdate, ProductDelete, MissionList, ProductDetails, MissionByDateRange
 api.add_resource(Index, '/') #como se fosse a rota, so que com a chamada da api
 api.add_resource(ProductCreate, '/criar')
 api.add_resource(ProductUpdate, '/atualizar')
 api.add_resource(ProductDelete, '/deletar')
+api.add_resource(MissionList, '/missoes')
+api.add_resource(ProductDetails, '/missoes/<int:id>')
+api.add_resource(MissionByDateRange, '/missoes_data')
