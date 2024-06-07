@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from flask_restful import Resource, reqparse
-from datetime import datetime
+from datetime import datetime 
 from app.models.products import Products
 import re
 
@@ -62,7 +62,7 @@ class ProductCreate(Resource):
 
         try:
             Products.save_products(self, datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
-            return {"message": 'Product create successfully!'}, 200
+            return {"message": 'Produto criado com sucesso'}, 200
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
@@ -76,7 +76,7 @@ class ProductUpdate(Resource):
                 return jsonify({'status': 400, 'msg': str(e)}), 400
             Products.update_products(self, datas['id'], 
             datas['name'], datas['data_lancamento'], datas['destino'], datas['estado_missao'], datas['tripulacao'], datas['carga_util'], duracao_missao_segundos, datas['missao_custo'], datas['missao_status'])
-            return {"message": 'Products update successfully!'}, 200    
+            return {"message": 'Produtos atualizados com sucesso!'}, 200    
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
@@ -85,7 +85,7 @@ class ProductDelete(Resource):
         try:
             datas = argumentos_deletar.parse_args()
             Products.delete_products(self, datas['id'])
-            return {"message": 'Products delete successfully!'}, 200
+            return {"message": 'Produtos deletados com sucesso!'}, 200
         except Exception as e:
             return jsonify({'status': 500, 'msg': f'{e}'}), 500
         
@@ -110,7 +110,7 @@ class ProductDetails(Resource):
             # Obter a missão com base no ID
             mission = Products.query.get(id)
             if not mission:
-                return {"message": "Mission not found"}, 404
+                return {"message": "Missao nao encontrada"}, 404
             
             # Criar um dicionário com os detalhes da missão
             mission_details = {
